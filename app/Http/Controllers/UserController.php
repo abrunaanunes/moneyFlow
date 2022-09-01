@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\User;
+use App\Rules\CPF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -48,7 +49,8 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'role' => 'required|string|in:client,shopkeeper',
-            'document' => ['required', 'string', 'unique:users'],
+            'cpf' => ['nullable', 'string', 'unique:users', 'required_if:role,client', new CPF],
+            'cnpj' => 'nullable|string|unique:users|required_if:role,shopkeeper',
             'email' => 'required|email|unique:users',
             'password' => 'required|string',
         ]);
@@ -69,7 +71,8 @@ class UserController extends Controller
                 $user = new $this->model();
                 $user->name = $validator['name'];
                 $user->role = $validator['role'];
-                $user->document = $validator['document'];
+                $user->cpf = $validator['cpf'];
+                $user->cnpj = $validator['cpf'];
                 $user->email = $validator['email'];
                 $user->password = bcrypt($validator['password']);
 
@@ -130,7 +133,8 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'role' => 'required|string|in:client,shopkeeper',
-            'document' => ['required', 'string', Rule::unique('users')->ignore($id)],
+            'cpf' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,client', new CPF],
+            'cnpj' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,shopkeeper'],
             'email' => ['required', 'email', Rule::unique('users')->ignore($id)],
             'password' => 'nullable|string',
         ]);
@@ -148,7 +152,8 @@ class UserController extends Controller
 
             $user->name = $request->get('name');
             $user->role = $request->get('role');
-            $user->document = $request->get('document');
+            $user->cpf = $request->get('cpf');
+            $user->cnpj = $request->get('cpf');
             $user->email = $request->get('email');
             $user->password = bcrypt($request->get('password'));
 
