@@ -62,7 +62,7 @@ class AccountController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 404,
-                'data' => 'Erro de validação.',
+                'data' => $validator->errors()->first(),
                 'error' => true
             ]);
         }
@@ -76,17 +76,19 @@ class AccountController extends Controller
                 throw new Exception("Saldo insuficiente.", 404);                
             }
             
-            $transaction = new Transaction([
+            $transaction = new Transaction();
+            $transaction->fill([
                 'account_id' => $account_payer->id,
                 'user_id' => $account_payee->id,
                 'amount' => $validator['value'],
                 'status' => 'pending'
-            ]);
+            ])->save();
 
             // Consultando serviço autorizador externo
             $authorization = $this->getQuery('https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6');
 
             if($authorization->message != 'Autorizado') {
+                $transaction->update(['status' => 'canceled']);
                 return response()->json([
                     'status' => 404,
                     'data' => 'Transação não autorizada.',
