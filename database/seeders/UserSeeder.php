@@ -19,7 +19,8 @@ class UserSeeder extends Seeder
                 'id' => 1,
                 'name' => 'Luiz Gustavo',
                 'role' => 'shopkeeper',
-                'document' => '180.864.230-93',
+                'cpf' => null,
+                'cnpj' => '61.137.620/0001-61',
                 'email' => 'luizgustavo@moneyflow.com.br',
                 'password' => '$2y$10$H/QkdnCY30CaUZxEAMkBiet4I1wwrbJN1/dK6U7d9Eszeq1C1KFmS', // M4tr1x123
                 'created_at' => now(),
@@ -30,7 +31,8 @@ class UserSeeder extends Seeder
                 'id' => 2,
                 'name' => 'Maria Luiza',
                 'role' => 'client',
-                'document' => '803.851.650-80',
+                'cpf' => '803.851.650-80',
+                'cnpj' => null,
                 'email' => 'marialuiza@moneyflow.com.br',
                 'password' => '$2y$10$H/QkdnCY30CaUZxEAMkBiet4I1wwrbJN1/dK6U7d9Eszeq1C1KFmS', // M4tr1x123
                 'created_at' => now(),
@@ -41,7 +43,8 @@ class UserSeeder extends Seeder
                 'id' => 3,
                 'name' => 'João Silva',
                 'role' => 'shopkeeper',
-                'document' => '444.161.360-13',
+                'cpf' => null,
+                'cnpj' => '97.346.998/0001-12',
                 'email' => 'joaosilva@moneyflow.com.br',
                 'password' => '$2y$10$H/QkdnCY30CaUZxEAMkBiet4I1wwrbJN1/dK6U7d9Eszeq1C1KFmS', // M4tr1x123
                 'created_at' => now(),
@@ -52,7 +55,8 @@ class UserSeeder extends Seeder
                 'id' => 4,
                 'name' => 'Debora Nunes',
                 'role' => 'client',
-                'document' => '870.117.830-08',
+                'cpf' => '870.117.830-08',
+                'cnpj' => null,
                 'email' => 'deboranunes@moneyflow.com.br',
                 'password' => '$2y$10$H/QkdnCY30CaUZxEAMkBiet4I1wwrbJN1/dK6U7d9Eszeq1C1KFmS', // M4tr1x123
                 'created_at' => now(),
@@ -63,7 +67,8 @@ class UserSeeder extends Seeder
                 'id' => 5,
                 'name' => 'Luiza Souza',
                 'role' => 'shopkeeper',
-                'document' => '245.776.240-52',
+                'cpf' => null,
+                'cnpj' => '55.099.542/0001-55',
                 'email' => 'luizasouza@moneyflow.com.br',
                 'password' => '$2y$10$H/QkdnCY30CaUZxEAMkBiet4I1wwrbJN1/dK6U7d9Eszeq1C1KFmS', // M4tr1x123
                 'created_at' => now(),
