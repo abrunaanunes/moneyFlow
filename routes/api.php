@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group([
+    'as' => 'auth.',
     'prefix' => 'auth'
 ],function () {
     Route::post('login', [UserController::class, 'login']);
@@ -26,29 +27,26 @@ Route::group([
 
 Route::group([
     'middleware' => 'auth:sanctum',
+    'as' => 'protected.',
     'prefix' => 'protected',
 ], function() {
-    Route::post('logout', [UserController::class, 'logout']);
     
     Route::group([
+        'as' => 'user.',
         'prefix' => 'user'
     ], function() {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/{user}', [UserController::class, 'show']);
         Route::put('/{user}', [UserController::class, 'update']);
         Route::delete('/{user}', [UserController::class, 'delete']);
+        Route::post('/logout', [UserController::class, 'logout']);
     });
 
     Route::group([
+        'as' => 'account.',
         'prefix' => 'account'
     ], function() {
         Route::get('/', [AccountController::class, 'getBalance']);
         Route::post('/', [AccountController::class, 'sendMoney']);
-    });
-
-    Route::group([
-        'prefix' => 'transaction'
-    ], function() {
-        Route::post('/{transaction}', [TransactionController::class, 'rollback']);
     });
 });
