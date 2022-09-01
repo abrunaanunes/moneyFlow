@@ -47,8 +47,8 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'role' => 'required|string',
-            'document' => 'required|string|unique:users',
+            'role' => 'required|string|in:client,shopkeeper',
+            'document' => ['required', 'string', 'unique:users'],
             'email' => 'required|email|unique:users',
             'password' => 'required|string',
         ]);
@@ -129,7 +129,7 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'role' => 'required',
+            'role' => 'required|string|in:client,shopkeeper',
             'document' => ['required', 'string', Rule::unique('users')->ignore($id)],
             'email' => ['required', 'email', Rule::unique('users')->ignore($id)],
             'password' => 'nullable|string',
