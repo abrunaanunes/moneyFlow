@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\TransactionStatus;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
@@ -48,13 +49,14 @@ class AccountController extends Controller
      */
     protected function doTransaction(Request $request)
     {
-        if(auth()->user()->role != 'client') {
+        if(auth()->user()->role != 'client' || auth()->user()->id == request('payee')) {
             return response()->json([
                 'status' => 404,
-                'data' => 'Operação indisponível para a sua conta.',
+                'data' => 'Não é possível realizar esta operação.',
                 'error' => true
             ]);
         }
+
         $validator = Validator::make($request->all(), [
             'value' => 'required|integer',
             'payee' => 'required|exists:users,id',
@@ -82,14 +84,15 @@ class AccountController extends Controller
                 'account_id' => $account_payer->id,
                 'user_id' => $account_payee->id,
                 'amount' => $validator['value'],
-                'status' => 'pending'
+                'status' => TransactionStatus::IN_ANALYSIS
             ])->save();
 
             // Consultando serviço autorizador externo
+
             $authorization = $this->getQuery('https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6');
 
             if($authorization->message != 'Autorizado') {
-                $transaction->update(['status' => 'canceled']);
+                $transaction->update(['status' => TransactionStatus::CANCELED]);
                 return response()->json([
                     'status' => 404,
                     'data' => 'Transação não autorizada.',
@@ -103,7 +106,7 @@ class AccountController extends Controller
             $new_payee_balance = $account_payee->balance + $validator['value'];
             $account_payee->update(['balance' => $new_payee_balance]);
 
-            $transaction->update(['status' => 'payment_ok']);
+            $transaction->update(['status' => TransactionStatus::PAID]);
 
             $this->sendNotification($account_payer);
             $this->sendNotification($account_payee);
@@ -128,6 +131,15 @@ class AccountController extends Controller
     {
         try {
             $transaction = Transaction::where('id', $id)->firstOrFail();
+
+            if($transaction->status != TransactionStatus::PAID) {
+                return response()->json([
+                    'status' => 404,
+                    'data' => 'Não é possível realizar esta operação.',
+                    'error' => true
+                ]);
+            }
+
             $account_payer = Account::where('id', $transaction->account_id)->firstOrFail();
 
             $account_payee = Account::where('id', $transaction->user_id)->firstOrFail();
@@ -138,7 +150,7 @@ class AccountController extends Controller
             $new_payer_balance = $account_payer->balance + $transaction->amount;
             $account_payer->update(['balance' => $new_payer_balance]);
 
-            $transaction->update(['status' => 'canceled']);
+            $transaction->update(['status' => TransactionStatus::REFUNDED]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 404,
