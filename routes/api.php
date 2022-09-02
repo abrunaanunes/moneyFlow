@@ -47,6 +47,7 @@ Route::group([
         'prefix' => 'account'
     ], function() {
         Route::get('/', [AccountController::class, 'getBalance']);
-        Route::post('/', [AccountController::class, 'sendMoney']);
+        Route::post('/do-transaction', [AccountController::class, 'doTransaction'])->name('do-transaction');
+        Route::post('/undo-transaction/{id}', [AccountController::class, 'undoTransaction'])->name('undo-transaction');
     });
 });

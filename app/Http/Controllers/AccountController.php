@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Traits\HasExternalQuery;
 use App\Traits\TransactionAutorization;
 use Exception;
@@ -45,7 +46,7 @@ class AccountController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    protected function sendMoney(Request $request)
+    protected function doTransaction(Request $request)
     {
         if(auth()->user()->role != 'client') {
             return response()->json([
@@ -103,6 +104,9 @@ class AccountController extends Controller
             $account_payee->update(['balance' => $new_payee_balance]);
 
             $transaction->update(['status' => 'payment_ok']);
+
+            $this->sendNotification($account_payer);
+            $this->sendNotification($account_payee);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 404,
@@ -120,7 +124,39 @@ class AccountController extends Controller
         ]);
     }
 
-    protected function sendNotification() 
+    public function undoTransaction ($id) 
+    {
+        try {
+            $transaction = Transaction::where('id', $id)->firstOrFail();
+            $account_payer = Account::where('id', $transaction->account_id)->firstOrFail();
+
+            $account_payee = Account::where('id', $transaction->user_id)->firstOrFail();
+            
+            $new_payee_balance = $account_payee->balance - $transaction->amount;
+            $account_payee->update(['balance' => $new_payee_balance]);
+
+            $new_payer_balance = $account_payer->balance + $transaction->amount;
+            $account_payer->update(['balance' => $new_payer_balance]);
+
+            $transaction->update(['status' => 'canceled']);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => 404,
+                'data' => $th->getMessage(),
+                'error' => true
+            ]);
+        }
+
+        return response()->json([
+            'status' => 200,
+            'data' => [
+                'transaction' => $transaction
+            ],
+            'error' => false
+        ]);
+    }
+
+    protected function sendNotification(Account $user) 
     {
         return $this->getQuery('http://o4d9z.mocklab.io/notify');
     }
