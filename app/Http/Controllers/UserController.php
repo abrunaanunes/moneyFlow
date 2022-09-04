@@ -137,6 +137,7 @@ class UserController extends Controller
                 'error' => true
             ]);
         }
+        $validator = $validator->validate();
 
         try {
             $user = $this->model::find($id);
@@ -146,7 +147,6 @@ class UserController extends Controller
                 'cpf' => $validator['cpf'],
                 'cnpj' => $validator['cnpj'],
                 'email' => $validator['email'],
-                'password' => bcrypt($validator['password'])
             ]);
         } catch (\Throwable $th) {
             return response()->json([
