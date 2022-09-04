@@ -20,8 +20,8 @@ Route::group([
     'as' => 'auth.',
     'prefix' => 'auth'
 ],function () {
-    Route::post('login', [UserController::class, 'login']);
-    Route::post('register', [UserController::class, 'store']);
+    Route::post('login', [UserController::class, 'login'])->name('login');
+    Route::post('register', [UserController::class, 'store'])->name('store');
 });
 
 
@@ -39,7 +39,7 @@ Route::group([
         Route::get('/{user}', [UserController::class, 'show']);
         Route::put('/{user}', [UserController::class, 'update']);
         Route::delete('/{user}', [UserController::class, 'delete']);
-        Route::post('/logout', [UserController::class, 'logout']);
+        Route::post('/logout', [UserController::class, 'logout'])->name('login');
     });
 
     Route::group([
@@ -47,7 +47,6 @@ Route::group([
         'prefix' => 'account'
     ], function() {
         Route::get('/', [AccountController::class, 'getBalance']);
-        Route::post('/do-transaction', [AccountController::class, 'doTransaction'])->name('do-transaction');
-        Route::post('/undo-transaction/{id}', [AccountController::class, 'undoTransaction'])->name('undo-transaction');
+        Route::post('/', [AccountController::class, 'doTransaction']);
     });
 });

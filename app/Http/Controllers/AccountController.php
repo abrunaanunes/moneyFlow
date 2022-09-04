@@ -73,84 +73,40 @@ class AccountController extends Controller
         $validator = $validator->validated();
 
         try {
-            $account_payer = $this->model::where('user_id', auth()->id())->firstOrFail();
-            $account_payee = $this->model::where('user_id', $validator['payee'])->firstOrFail();
-            if(!$account_payer->balance >= $validator['value']) {
-                throw new Exception("Saldo insuficiente.", 404);                
-            }
-            
-            $transaction = new Transaction();
-            $transaction->fill([
-                'account_id' => $account_payer->id,
-                'user_id' => $account_payee->id,
-                'amount' => $validator['value'],
-                'status' => TransactionStatus::IN_ANALYSIS
-            ])->save();
-
-            // Consultando serviço autorizador externo
-
-            $authorization = $this->getQuery('https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6');
-
-            if($authorization->message != 'Autorizado') {
-                $transaction->update(['status' => TransactionStatus::CANCELED]);
-                return response()->json([
-                    'status' => 404,
-                    'data' => 'Transação não autorizada.',
-                    'error' => true
-                ]);
-            }
-
-            $new_payer_balance = $account_payer->balance - $validator['value'];
-            $account_payer->update(['balance' => $new_payer_balance]);
-
-            $new_payee_balance = $account_payee->balance + $validator['value'];
-            $account_payee->update(['balance' => $new_payee_balance]);
-
-            $transaction->update(['status' => TransactionStatus::PAID]);
-
-            $this->sendNotification($account_payer);
-            $this->sendNotification($account_payee);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => 404,
-                'data' => $th->getMessage(),
-                'error' => true
-            ]);
-        }
-
-        return response()->json([
-            'status' => 200,
-            'data' => [
-                'transaction' => $transaction
-            ],
-            'error' => false
-        ]);
-    }
-
-    public function undoTransaction ($id) 
-    {
-        try {
-            $transaction = Transaction::where('id', $id)->firstOrFail();
-
-            if($transaction->status != TransactionStatus::PAID) {
-                return response()->json([
-                    'status' => 404,
-                    'data' => 'Não é possível realizar esta operação.',
-                    'error' => true
-                ]);
-            }
-
-            $account_payer = Account::where('id', $transaction->account_id)->firstOrFail();
-
-            $account_payee = Account::where('id', $transaction->user_id)->firstOrFail();
-            
-            $new_payee_balance = $account_payee->balance - $transaction->amount;
-            $account_payee->update(['balance' => $new_payee_balance]);
-
-            $new_payer_balance = $account_payer->balance + $transaction->amount;
-            $account_payer->update(['balance' => $new_payer_balance]);
-
-            $transaction->update(['status' => TransactionStatus::REFUNDED]);
+            $transaction = DB::transaction(function ($query) use ($validator) {
+                $account_payer = $this->model::where('user_id', auth()->id())->firstOrFail();
+                $account_payee = $this->model::where('user_id', $validator['payee'])->firstOrFail();
+    
+                if(!$account_payer->balance >= $validator['value']) {
+                    throw new Exception("Saldo insuficiente.", 404);                
+                }
+    
+                $transaction = new Transaction();
+                $transaction->fill([
+                    'account_id' => $account_payer->id,
+                    'user_id' => $account_payee->id,
+                    'amount' => $validator['value'],
+                    'status' => TransactionStatus::IN_ANALYSIS
+                ])->save();
+    
+                 // Consultando serviço autorizador externo
+                $authorization = $this->getQuery('https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6');
+                if(!is_object($authorization) || $authorization->message != 'Autorizado') {
+                    throw new Exception("Transação não autorizada.", 404);  
+                }
+    
+                $new_payer_balance = $account_payer->balance - $validator['value'];
+                $account_payer->update(['balance' => $new_payer_balance]);
+    
+                $new_payee_balance = $account_payee->balance + $validator['value'];
+                $account_payee->update(['balance' => $new_payee_balance]);
+    
+                $transaction->update(['status' => TransactionStatus::PAID]);
+                $this->sendNotification($account_payer);
+                $this->sendNotification($account_payee);
+    
+                return $transaction;
+            });
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 404,
