@@ -42,6 +42,22 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            $account = new Account();
+            $account->fill([
+                'account_key' => $user->email,
+                'user_id' => $user->id
+            ])->save();
+        });
+    }
+
     public function account()
     {
         return $this->hasOne(Account::class);

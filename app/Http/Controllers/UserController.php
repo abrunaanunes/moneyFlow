@@ -66,24 +66,15 @@ class UserController extends Controller
         $validator = $validator->validate();
 
         try {
-
-            DB::transaction(function() use ($validator) {
-                $user = new $this->model();
-                $user->name = $validator['name'];
-                $user->role = $validator['role'];
-                $user->cpf = $validator['cpf'];
-                $user->cnpj = $validator['cpf'];
-                $user->email = $validator['email'];
-                $user->password = bcrypt($validator['password']);
-
-                $user->save();
-
-                $account = new Account();
-                $account->fill([
-                    'account_key' => $user->email,
-                    'user_id' => $user->id
-                ])->save();
-            });
+            $user = new $this->model();
+            $user->fill([
+                'name' => $validator['name'],
+                'role' => $validator['role'],
+                'cpf' => $validator['cpf'],
+                'cnpj' => $validator['cnpj'],
+                'email' => $validator['email'],
+                'password' => bcrypt($validator['password'])
+            ])->save();
             
         } catch (\Throwable $th) {
             return response()->json([
@@ -149,16 +140,14 @@ class UserController extends Controller
 
         try {
             $user = $this->model::find($id);
-
-            $user->name = $request->get('name');
-            $user->role = $request->get('role');
-            $user->cpf = $request->get('cpf');
-            $user->cnpj = $request->get('cpf');
-            $user->email = $request->get('email');
-            $user->password = bcrypt($request->get('password'));
-
-            $user->save();
-
+            $user->update([
+                'name' => $validator['name'],
+                'role' => $validator['role'],
+                'cpf' => $validator['cpf'],
+                'cnpj' => $validator['cnpj'],
+                'email' => $validator['email'],
+                'password' => bcrypt($validator['password'])
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 404,
