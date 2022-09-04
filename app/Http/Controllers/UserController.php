@@ -86,13 +86,13 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  int  $userId
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($userId)
     {
         try {
-            $user = $this->model::findOrFail($id);
+            $user = $this->model::findOrFail($userId);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 404,
@@ -112,18 +112,18 @@ class UserController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  int  $userId
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $userId)
     {
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string',
                 'role' => 'required|string|in:client,shopkeeper',
-                'cpf' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,client', new CPF],
-                'cnpj' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,shopkeeper'],
-                'email' => ['required', 'email', Rule::unique('users')->ignore($id)],
+                'cpf' => ['nullable', 'string', Rule::unique('users')->ignore($userId), 'required_if:role,client', new CPF],
+                'cnpj' => ['nullable', 'string', Rule::unique('users')->ignore($userId), 'required_if:role,shopkeeper'],
+                'email' => ['required', 'email', Rule::unique('users')->ignore($userId)],
                 'password' => 'nullable|string',
             ]);
      
@@ -132,7 +132,7 @@ class UserController extends Controller
             }
             $validator = $validator->validate();
             
-            $user = $this->model::find($id);
+            $user = $this->model::find($userId);
             $user->update([
                 'name' => $validator['name'],
                 'role' => $validator['role'],
@@ -158,10 +158,10 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  int  $userId
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($userId)
     {
         //
     }

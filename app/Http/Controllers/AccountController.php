@@ -66,17 +66,17 @@ class AccountController extends Controller
                 }
             
                 $validator = $validator->validated();
-                $account_payer = $this->model::where('user_id', auth()->id())->firstOrFail();
-                $account_payee = $this->model::where('user_id', $validator['payee'])->firstOrFail();
+                $accountPayer = $this->model::where('user_id', auth()->id())->firstOrFail();
+                $accountPayee = $this->model::where('user_id', $validator['payee'])->firstOrFail();
     
-                if(!$account_payer->balance >= $validator['value']) {
+                if(!$accountPayer->balance >= $validator['value']) {
                     throw new Exception("Saldo insuficiente.", 404);                
                 }
     
                 $transaction = new Transaction();
                 $transaction->fill([
-                    'account_id' => $account_payer->account->id,
-                    'user_id' => $account_payee->id,
+                    'account_id' => $accountPayer->account->id,
+                    'user_id' => $accountPayee->id,
                     'amount' => $validator['value'],
                     'status' => TransactionStatus::IN_ANALYSIS
                 ])->save();
@@ -87,15 +87,15 @@ class AccountController extends Controller
                     throw new Exception("Transação não autorizada.", 404);  
                 }
     
-                $new_payer_balance = $account_payer->balance - $validator['value'];
-                $account_payer->update(['balance' => $new_payer_balance]);
+                $newPayerBalance = $accountPayer->balance - $validator['value'];
+                $accountPayer->update(['balance' => $newPayerBalance]);
     
-                $new_payee_balance = $account_payee->balance + $validator['value'];
-                $account_payee->update(['balance' => $new_payee_balance]);
+                $newPayeeBalance = $accountPayee->balance + $validator['value'];
+                $accountPayee->update(['balance' => $newPayeeBalance]);
     
                 $transaction->update(['status' => TransactionStatus::PAID]);
-                $this->sendNotification($account_payer);
-                $this->sendNotification($account_payee);
+                $this->sendNotification($accountPayer);
+                $this->sendNotification($accountPayee);
     
                 return $transaction;
             });

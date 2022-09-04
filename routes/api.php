@@ -36,8 +36,8 @@ Route::group([
         'prefix' => 'user'
     ], function() {
         Route::get('/', [UserController::class, 'index']);
-        Route::get('/{user}', [UserController::class, 'show']);
-        Route::put('/{user}', [UserController::class, 'update']);
+        Route::get('/{userId}', [UserController::class, 'show']);
+        Route::put('/{userId}', [UserController::class, 'update']);
         Route::post('/logout', [UserController::class, 'logout'])->name('login');
     });
 
