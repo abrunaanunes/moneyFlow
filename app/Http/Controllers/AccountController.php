@@ -49,31 +49,23 @@ class AccountController extends Controller
      */
     protected function doTransaction(Request $request)
     {
-        if(auth()->user()->role != 'client' || auth()->user()->id == request('payee')) {
-            return response()->json([
-                'status' => 404,
-                'data' => 'Não é possível realizar esta operação.',
-                'error' => true
-            ]);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'value' => 'required|integer',
-            'payee' => 'required|exists:users,id',
-        ]);
- 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 404,
-                'data' => $validator->errors()->first(),
-                'error' => true
-            ]);
-        }
-
-        $validator = $validator->validated();
-
         try {
-            $transaction = DB::transaction(function ($query) use ($validator) {
+            $transaction = DB::transaction(function ($query) use ($request) {
+                
+                if(auth()->user()->role != 'client' || auth()->user()->id == request('payee')) {
+                    throw new Exception('This transaction is not possible.', 404); 
+                }
+            
+                $validator = Validator::make($request->all(), [
+                    'value' => 'required|integer',
+                    'payee' => 'required|exists:users,id',
+                ]);
+            
+                if ($validator->fails()) {
+                    throw new Exception($validator->errors()->first(), 404); 
+                }
+            
+                $validator = $validator->validated();
                 $account_payer = $this->model::where('user_id', auth()->id())->firstOrFail();
                 $account_payee = $this->model::where('user_id', $validator['payee'])->firstOrFail();
     
@@ -83,7 +75,7 @@ class AccountController extends Controller
     
                 $transaction = new Transaction();
                 $transaction->fill([
-                    'account_id' => $account_payer->id,
+                    'account_id' => $account_payer->account->id,
                     'user_id' => $account_payee->id,
                     'amount' => $validator['value'],
                     'status' => TransactionStatus::IN_ANALYSIS

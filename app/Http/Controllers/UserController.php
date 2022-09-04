@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\User;
 use App\Rules\CPF;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -45,37 +46,32 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
-            'role' => 'required|string|in:client,shopkeeper',
-            'cpf' => ['nullable', 'string', 'unique:users', 'required_if:role,client', new CPF],
-            'cnpj' => 'nullable|string|unique:users|required_if:role,shopkeeper',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string',
-        ]);
-
- 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 404,
-                'data' => $validator->errors()->first(),
-                'error' => true
-            ]);
-        }
-        $validator = $validator->validate();
-
+    { 
         try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string',
+                'role' => 'required|string|in:client,shopkeeper',
+                'cpf' => ['nullable', 'string', 'unique:users', 'required_if:role,client', new CPF],
+                'cnpj' => 'nullable|string|unique:users|required_if:role,shopkeeper',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|string',
+            ]);
+            
+            if ($validator->fails()) {
+                throw new Exception($validator->errors()->first(), 404); 
+            }
+
+            $validator = $validator->validate();
+
             $user = new $this->model();
             $user->fill([
                 'name' => $validator['name'],
                 'role' => $validator['role'],
-                'cpf' => $validator['cpf'],
-                'cnpj' => $validator['cnpj'],
+                'cpf' => $validator['role'] === 'client' ? $validator['cpf'] : null,
+                'cnpj' => $validator['role'] === 'shopkeeper' ? $validator['cnpj'] : null,
                 'email' => $validator['email'],
                 'password' => bcrypt($validator['password'])
             ])->save();
-            
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 404,
@@ -121,31 +117,27 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
-            'role' => 'required|string|in:client,shopkeeper',
-            'cpf' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,client', new CPF],
-            'cnpj' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,shopkeeper'],
-            'email' => ['required', 'email', Rule::unique('users')->ignore($id)],
-            'password' => 'nullable|string',
-        ]);
- 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 404,
-                'data' => $validator->errors()->first(),
-                'error' => true
-            ]);
-        }
-        $validator = $validator->validate();
-
         try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string',
+                'role' => 'required|string|in:client,shopkeeper',
+                'cpf' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,client', new CPF],
+                'cnpj' => ['nullable', 'string', Rule::unique('users')->ignore($id), 'required_if:role,shopkeeper'],
+                'email' => ['required', 'email', Rule::unique('users')->ignore($id)],
+                'password' => 'nullable|string',
+            ]);
+     
+            if ($validator->fails()) {
+                throw new Exception($validator->errors()->first(), 404); 
+            }
+            $validator = $validator->validate();
+            
             $user = $this->model::find($id);
             $user->update([
                 'name' => $validator['name'],
                 'role' => $validator['role'],
-                'cpf' => $validator['cpf'],
-                'cnpj' => $validator['cnpj'],
+                'cpf' => $validator['role'] === 'client' ? $validator['cpf'] : null,
+                'cnpj' => $validator['role'] === 'shopkeeper' ? $validator['cnpj'] : null,
                 'email' => $validator['email'],
             ]);
         } catch (\Throwable $th) {
@@ -171,24 +163,7 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        try {
-            $user = $this->model::findOrFail($id);
-            $user->delete();
-            $users = $this->model::all();
-
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => 404,
-                'data' => $th->getMessage(),
-                'error' => true
-            ]);
-        }
-
-        return response()->json([
-            'status' => 200,
-            'data' => $users,
-            'error' => false
-        ]);
+        //
     }
 
     public function login(Request $request)
@@ -231,7 +206,7 @@ class UserController extends Controller
 
         return response()->json([
             'status' => 200,
-            'data' => 'Logout realizado com sucesso!',
+            'data' => 'Success',
             'error' => false
         ]);
     }

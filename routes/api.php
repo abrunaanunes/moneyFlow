@@ -38,7 +38,6 @@ Route::group([
         Route::get('/', [UserController::class, 'index']);
         Route::get('/{user}', [UserController::class, 'show']);
         Route::put('/{user}', [UserController::class, 'update']);
-        Route::delete('/{user}', [UserController::class, 'delete']);
         Route::post('/logout', [UserController::class, 'logout'])->name('login');
     });
 
