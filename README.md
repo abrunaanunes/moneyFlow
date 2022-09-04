@@ -21,6 +21,14 @@ Para um maior controle de entradas e saídas, a operação de transferência é 
 
 ## Rotas
 
+### Observações
+No caso do registro de um usuário tipo client, o CPF deve ser preenchido e, no caso do registro de um usuário tipo shopkeeper, o CNPJ deve ser preenchido.
+
+Caso o token de autenticação não seja indicado nas rotas protegidas, a mensagem recebida será:
+``{
+    "message": "Unauthenticated."
+}`
+
 - POST localhost:{port}/api/auth/register
 Para criar um registro novo de usuário, acesse o Postman e com o método POST, acesse a rota localhost:{port}/api/auth/register. Na aba Headers, preencha o key value com ['Accept' = > 'application/json'] para receber todos os retornos na estrutura JSON.
 Logo após, na aba Body, selecione a opção raw JSON e crie um JSON de acordo com o exemplo abaixo.
@@ -33,8 +41,6 @@ Logo após, na aba Body, selecione a opção raw JSON e crie um JSON de acordo c
     "password" : "Bruna4321"
 }``
 O retorno será o status da requisição, token de autenticação (caso não ocorram falhas) e o status de erro. Para acessar as demais rotas protegidas basta acessar a aba Headers e preencher o key value com ['Autorization' => 'Bearer {token}'] ou acessar a aba Authorization, selecionar o type Bearer Token e colar o token no campo ao lado direito.
-### Observação
-No caso do registro de um usuário tipo client, o CPF deve ser preenchido e, no caso do registro de um usuário tipo shopkeeper, o CNPJ deve ser preenchido.
 
 - POST localhost:{port}/api/auth/login
 Para criar o token de autenticação através do login, acesse o Postman e com o método POST, acesse a rota localhost:{port}/api/auth/login. Na aba Headers, preencha o key value com ['Accept' = > 'application/json'] para receber todos os retornos na estrutura JSON.
@@ -44,12 +50,6 @@ Logo após, na aba Body, selecione a opção raw JSON, crie um JSON para informa
     "password" : "M4tr1x123"
 }``
 O retorno será o status da requisição, token de autenticação (caso não ocorram falhas) e o status de erro. Para acessar as demais rotas protegidas basta acessar a aba Headers e preencher o key value com ['Autorization' => 'Bearer {token}'] ou acessar a aba Authorization, selecionar o type Bearer Token e colar o token no campo ao lado direito.
-
-### Observação
-Caso o token de autenticação não seja indicado nas rotas protegidas, a mensagem recebida será:
-``{
-    "message": "Unauthenticated."
-}``
 
 - GET localhost:{port}/api/protected/user (index)
 Acesse a rota localhost:{port}/api/protected/user com o método GET e faça a autenticação com o token retornado no login ou registro. O retorno terá o status da requisição, um array com a listagem dos usuários e seus respectivos atributos (caso não ocorram falhas) e o status de erro.
